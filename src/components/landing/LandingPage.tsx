@@ -28,11 +28,20 @@ import {
   ArrowRight,
 } from "lucide-react";
 
-const PHONE_DISPLAY = "[ТЕЛЕФОН]";
-const PHONE_TEL = "tel:+70000000000";
-const EMAIL = "[EMAIL]";
-const ADDRESS = "[АДРЕС]";
-const INSTAGRAM_URL = "[ССЫЛКА НА INSTAGRAM]";
+const PHONE_DISPLAY = "+7 (962) 644-44-88";
+const PHONE_TEL = "tel:+79626444488";
+const EMAIL = "[EMAIL]"; // укажите email для футера
+const ADDRESS = "г. Назрань, ул. И. Базоркина, 116";
+const INSTAGRAM_URL = "https://instagram.com/reabilitaciya_ing_";
+// Куда приходят заявки. Замените на ваш email — на первую заявку FormSubmit
+// пришлёт письмо-подтверждение, после подтверждения заявки начнут приходить.
+const FORM_SUBMIT_EMAIL = "REPLACE_ME@example.com";
+const FORM_SUBMIT_URL = `https://formsubmit.co/ajax/${FORM_SUBMIT_EMAIL}`;
+// Яндекс.Карта — Назрань, ул. И. Базоркина, 116
+const YANDEX_MAP_SRC =
+  "https://yandex.ru/map-widget/v1/?ll=44.770000%2C43.226000&mode=search&text=" +
+  encodeURIComponent("Назрань, улица Идриса Базоркина, 116") +
+  "&z=16";
 
 const NAV = [
   { href: "#uslugi", label: "Услуги" },
