@@ -428,16 +428,71 @@ function Reviews() {
 }
 
 /* ---------- FORM ---------- */
+// Форматирование телефона в маску +7 (999) 999-99-99
+function formatPhone(value: string): string {
+  const digits = value.replace(/\D/g, "").replace(/^8/, "7").slice(0, 11);
+  const d = digits.startsWith("7") ? digits : "7" + digits;
+  const p = d.slice(0, 11);
+  const parts = [
+    "+7",
+    p.length > 1 ? " (" + p.slice(1, 4) : "",
+    p.length >= 4 ? ") " + p.slice(4, 7) : "",
+    p.length >= 7 ? "-" + p.slice(7, 9) : "",
+    p.length >= 9 ? "-" + p.slice(9, 11) : "",
+  ];
+  return parts.join("");
+}
+function isValidPhone(value: string): boolean {
+  return value.replace(/\D/g, "").length === 11;
+}
+
 function BookingForm() {
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", phone: "", time: "", service: SERVICE_OPTIONS[0], consent: false });
 
-  const submit = (e: React.FormEvent) => {
+  const onPhoneChange = (v: string) => {
+    setForm({ ...form, phone: formatPhone(v) });
+    setPhoneError(null);
+  };
+
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name.trim() || !form.phone.trim() || !form.consent) return;
-    // eslint-disable-next-line no-console
-    console.log("Booking submitted:", form);
-    setSent(true);
+    setError(null);
+
+    if (!form.name.trim()) return;
+    if (!isValidPhone(form.phone)) {
+      setPhoneError("Введите номер полностью: +7 (XXX) XXX-XX-XX");
+      return;
+    }
+    if (!form.consent) return;
+
+    setSending(true);
+    try {
+      const payload = {
+        _subject: `Новая заявка с сайта — ${form.name}`,
+        Имя: form.name,
+        Телефон: form.phone,
+        Услуга: form.service,
+        "Удобное время / комментарий": form.time || "—",
+        Источник: "Сайт Центра медицинской реабилитации",
+      };
+      const res = await fetch(FORM_SUBMIT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error("Ошибка отправки");
+      setSent(true);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error("Booking submit failed:", err, form);
+      setError("Не удалось отправить заявку. Позвоните нам, пожалуйста: " + PHONE_DISPLAY);
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -476,12 +531,23 @@ function BookingForm() {
               <p className="mt-3 text-muted-foreground">Мы свяжемся с вами в ближайшее время.</p>
             </div>
           ) : (
-            <form onSubmit={submit} className="space-y-4">
+            <form onSubmit={submit} className="space-y-4" noValidate>
               <Field label="Имя *">
-                <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input" placeholder="Ваше имя" />
+                <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input" placeholder="Ваше имя" autoComplete="name" />
               </Field>
               <Field label="Телефон *">
-                <input required type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="input" placeholder="+7 (___) ___-__-__" />
+                <input
+                  required
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  value={form.phone}
+                  onChange={(e) => onPhoneChange(e.target.value)}
+                  className={"input " + (phoneError ? "border-destructive" : "")}
+                  placeholder="+7 (___) ___-__-__"
+                  aria-invalid={!!phoneError}
+                />
+                {phoneError && <span className="mt-1 block text-xs text-destructive">{phoneError}</span>}
               </Field>
               <Field label="Интересующая услуга">
                 <select value={form.service} onChange={(e) => setForm({ ...form, service: e.target.value })} className="input">
@@ -495,8 +561,13 @@ function BookingForm() {
                 <input required type="checkbox" checked={form.consent} onChange={(e) => setForm({ ...form, consent: e.target.checked })} className="mt-1 h-4 w-4 accent-[color:var(--primary)]" />
                 <span>Согласен на обработку персональных данных в соответствии с <a href="#politika" className="text-primary-dark underline">политикой обработки</a>.</span>
               </label>
-              <button type="submit" className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3.5 text-base font-semibold text-primary-foreground hover:bg-primary-dark transition-colors">
-                Отправить заявку <ArrowRight className="h-4 w-4" />
+              {error && <div className="rounded-lg bg-destructive/10 text-destructive text-sm p-3">{error}</div>}
+              <button
+                type="submit"
+                disabled={sending}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3.5 text-base font-semibold text-primary-foreground hover:bg-primary-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {sending ? "Отправляем..." : (<>Отправить заявку <ArrowRight className="h-4 w-4" /></>)}
               </button>
             </form>
           )}
