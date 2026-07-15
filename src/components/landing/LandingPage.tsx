@@ -608,8 +608,17 @@ function Footer() {
         </div>
         <div>
           <h4 className="font-bold text-lg mb-4">Как нас найти</h4>
-          <div className="aspect-video rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-sm text-white/70">
-            [Карта: {ADDRESS}]
+          <div className="aspect-video rounded-xl overflow-hidden border border-white/20 bg-white/10">
+            <iframe
+              src={YANDEX_MAP_SRC}
+              title={`Яндекс.Карта: ${ADDRESS}`}
+              width="100%"
+              height="100%"
+              frameBorder={0}
+              loading="lazy"
+              allowFullScreen
+              style={{ border: 0, display: "block" }}
+            />
           </div>
         </div>
       </div>
